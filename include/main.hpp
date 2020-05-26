@@ -6,6 +6,7 @@
 
 #include <glm/glm/vec3.hpp>
 #include <glm/glm/vec4.hpp>
+#include <glm/glm/gtx/string_cast.hpp>
 
 #include <iostream>
 #include <string>
@@ -19,5 +20,8 @@
 #include "ComputeShader.hpp"
 #include "Camera.hpp"
 #include "Tracer.hpp"
+#include "filter.hpp"
+#include "ModelLoader.hpp"
+#include "BVH.hpp"
 
 #endif

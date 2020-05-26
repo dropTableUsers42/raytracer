@@ -16,13 +16,13 @@ class Quad: virtual public Object
 	std::vector<glm::vec2> vertices;
 	std::vector<unsigned int> indices;
 	GLuint VAO, VBO, EBO;
-	Shader shader;
 
 public:
-	Quad();
+	Quad(const char * vertexPath, const char * fragmentPath);
 	void init();
 	void render();
 	unsigned int getNumVertices();
+	Shader shader;
 };
 
 #endif

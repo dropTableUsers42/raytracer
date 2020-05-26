@@ -8,10 +8,19 @@ float GlfwSetter::yaw = 0;
 float GlfwSetter::pitch = 0;
 bool GlfwSetter::firstMouse = true;
 bool* GlfwSetter::importanceSampled = NULL;
+bool* GlfwSetter::useBlueNoise = NULL;
 FrameBuffer* GlfwSetter::framebuffer = NULL;
 Camera* GlfwSetter::camera = NULL;
 int GlfwSetter::frameNumber = 0;
 float GlfwSetter::distMoved = 0;
+float GlfwSetter::camHeight = 3.0;
+int* GlfwSetter::maxAccumulateSamples = NULL;
+bool* GlfwSetter::accumulateSamples = NULL;
+bool* GlfwSetter::freezeTime = NULL;
+int* GlfwSetter::iterations = NULL;
+bool GlfwSetter::filter = false;
+int* GlfwSetter::maxBounces = NULL;
+float GlfwSetter::exposure = 1.0;
 
 int GlfwSetter::init(int width, int height, GLFWwindow* &window_in)
 {
@@ -70,7 +79,7 @@ void GlfwSetter::key_callback(GLFWwindow* window, int key, int scancode, int act
 	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, GL_TRUE);
 	if (key == GLFW_KEY_F10 && action == GLFW_PRESS)
-		framebuffer->saveToImage("image.jpg");
+		framebuffer->saveToImage("image.png");
 	if (key == GLFW_KEY_W)
 	{
 		glm::vec3 eyediff = glm::normalize(camera->lookAt - camera->eye) * 0.1f;
@@ -84,8 +93,8 @@ void GlfwSetter::key_callback(GLFWwindow* window, int key, int scancode, int act
 			eyediff.z = 0;
 		}
 		glm::vec3 lookatdiff = eyediff;
-		camera->eye += eyediff + glm::vec3(0.0f, glm::cos(distMoved * 4) * 0.04, 0.0f);
-		camera->lookAt += lookatdiff + glm::vec3(0.0f, glm::cos(distMoved * 4) * 0.04, 0.0f);
+		camera->eye += eyediff;
+		camera->lookAt += lookatdiff;
 		frameNumber = 0;
 		distMoved += glm::length(eyediff);
 	}
@@ -102,8 +111,8 @@ void GlfwSetter::key_callback(GLFWwindow* window, int key, int scancode, int act
 			eyediff.z = 0;
 		}
 		glm::vec3 lookatdiff = eyediff;
-		camera->eye -= eyediff + glm::vec3(0.0f, glm::cos(distMoved * 4) * 0.04, 0.0f);
-		camera->lookAt -= lookatdiff + glm::vec3(0.0f, glm::cos(distMoved * 4) * 0.04, 0.0f);
+		camera->eye -= eyediff;
+		camera->lookAt -= lookatdiff;
 		frameNumber = 0;
 		distMoved += glm::length(eyediff);
 	}
@@ -120,8 +129,8 @@ void GlfwSetter::key_callback(GLFWwindow* window, int key, int scancode, int act
 			eyediff.z = 0;
 		}
 		glm::vec3 lookatdiff = eyediff;
-		camera->eye -= eyediff + glm::vec3(0.0f, glm::cos(distMoved * 4) * 0.04, 0.0f);
-		camera->lookAt -= lookatdiff + glm::vec3(0.0f, glm::cos(distMoved * 4) * 0.04, 0.0f);
+		camera->eye -= eyediff;
+		camera->lookAt -= lookatdiff;
 		frameNumber = 0;
 		distMoved += glm::length(eyediff);
 	}
@@ -138,15 +147,92 @@ void GlfwSetter::key_callback(GLFWwindow* window, int key, int scancode, int act
 			eyediff.z = 0;
 		}
 		glm::vec3 lookatdiff = eyediff;
-		camera->eye += eyediff + glm::vec3(0.0f, glm::cos(distMoved * 4) * 0.04, 0.0f);
-		camera->lookAt += lookatdiff + glm::vec3(0.0f, glm::cos(distMoved * 4) * 0.04, 0.0f);
+		camera->eye += eyediff;
+		camera->lookAt += lookatdiff;
 		frameNumber = 0;
 		distMoved += glm::length(eyediff);
 	}
-	if (key == GLFW_KEY_SPACE && action == GLFW_PRESS)
+	if(key == GLFW_KEY_Z)
+	{
+		glm::vec3 eyediff = glm::normalize(camera->up) * 0.1f;
+		eyediff.x = eyediff.z = 0;
+		glm::vec3 lookatdiff = eyediff;
+		camera -> eye += eyediff;
+		camera -> lookAt += lookatdiff;
+		frameNumber = 0;
+	}
+	if(key == GLFW_KEY_X)
+	{
+		glm::vec3 eyediff = glm::normalize(camera->up) * 0.1f;
+		eyediff.x = eyediff.z = 0;
+		if(camera->eye.y - eyediff.y < 0.0)
+		{
+			eyediff.y = 0;
+		}
+		glm::vec3 lookatdiff = eyediff;
+		camera -> eye -= eyediff;
+		camera -> lookAt -= lookatdiff;
+		frameNumber = 0;
+	}
+	if (key == GLFW_KEY_C && action == GLFW_PRESS)
 	{
 		*importanceSampled = !(*importanceSampled);
 		frameNumber = 0;
+	}
+	if (key == GLFW_KEY_B && action == GLFW_PRESS)
+	{
+		*useBlueNoise = !(*useBlueNoise);
+		frameNumber = 0;
+	}
+	if(key == GLFW_KEY_F && action == GLFW_PRESS)
+	{
+		*accumulateSamples = !(*accumulateSamples);
+		frameNumber = 0;
+	}
+	if(key == GLFW_KEY_T && action == GLFW_PRESS)
+	{
+		*freezeTime = !(*freezeTime);
+		frameNumber = 0;
+	}
+	if(key == GLFW_KEY_UP && action == GLFW_PRESS)
+	{
+		*maxAccumulateSamples++;
+		frameNumber = 0;
+	}
+	if(key == GLFW_KEY_DOWN && action == GLFW_PRESS)
+	{
+		*maxAccumulateSamples = std::max(1, *maxAccumulateSamples - 1);
+		frameNumber = 0;
+	}
+	if(key == GLFW_KEY_MINUS && action == GLFW_PRESS)
+	{
+		*iterations = glm::max((*iterations)-1, 1);
+	}
+	if(key == GLFW_KEY_EQUAL && action == GLFW_PRESS)
+	{
+		(*iterations)++;
+	}
+	if(key == GLFW_KEY_SPACE && action == GLFW_PRESS)
+	{
+		filter = !filter;
+	}
+	if(key == GLFW_KEY_COMMA && action == GLFW_PRESS)
+	{
+		(*maxBounces)++;
+		frameNumber = 0;
+	}
+	if(key == GLFW_KEY_PERIOD && action == GLFW_PRESS)
+	{
+		(*maxBounces) = std::max(2, (*maxBounces)-1);
+		frameNumber = 0;
+	}
+	if(key == GLFW_KEY_1)
+	{
+		exposure += 0.1;
+	}
+	if(key == GLFW_KEY_2)
+	{
+		exposure = std::max(0.0, exposure - 0.1); 
 	}
 }
 
@@ -217,6 +303,8 @@ void GlfwSetter::mouse_callback(GLFWwindow* window, double xpos, double ypos)
 
 void GlfwSetter::scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
+	GLfloat tempfov = camera->fov;
 	camera->fov = std::max(std::min(camera->fov - yoffset, 100.0), 45.0);
-	frameNumber = 0;
+	if(camera->fov != tempfov)
+		frameNumber = 0;
 }

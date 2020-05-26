@@ -178,4 +178,22 @@ obj/Tracer.o: src/Tracer.cpp include/Tracer.hpp \
  include/glm/glm/gtc/../gtc/../ext/vector_uint1_precision.hpp \
  include/glm/glm/gtc/type_ptr.inl include/Camera.hpp \
  include/Framebuffer.hpp include/stb_image.hpp \
- include/stb_image_write.hpp
+ include/stb_image_write.hpp include/BVH.hpp \
+ include/glm/glm/gtx/string_cast.hpp include/glm/glm/gtx/../glm.hpp \
+ include/glm/glm/gtx/../detail/_fixes.hpp \
+ include/glm/glm/gtx/../detail/setup.hpp include/glm/glm/gtx/../fwd.hpp \
+ include/glm/glm/gtx/../packing.hpp \
+ include/glm/glm/gtx/../detail/func_packing.inl \
+ include/glm/glm/gtx/../detail/type_half.hpp \
+ include/glm/glm/gtx/../detail/setup.hpp \
+ include/glm/glm/gtx/../detail/type_half.inl \
+ include/glm/glm/gtx/../integer.hpp \
+ include/glm/glm/gtx/../detail/func_integer.inl \
+ include/glm/glm/gtx/../gtc/type_precision.hpp \
+ include/glm/glm/gtx/../gtc/../ext/scalar_int_sized.hpp \
+ include/glm/glm/gtx/../gtc/../ext/../detail/setup.hpp \
+ include/glm/glm/gtx/../gtc/../ext/scalar_uint_sized.hpp \
+ include/glm/glm/gtx/../gtc/type_precision.inl \
+ include/glm/glm/gtx/../gtx/dual_quaternion.hpp \
+ include/glm/glm/gtx/../gtx/dual_quaternion.inl \
+ include/glm/glm/gtx/string_cast.inl include/Material.hpp

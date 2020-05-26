@@ -1,7 +1,7 @@
 #include "main.hpp"
 
-#define WIDTH 1200
-#define HEIGHT 800
+#define WIDTH 512
+#define HEIGHT 512
 
 int main(int argc, char** argv)
 {
@@ -21,14 +21,18 @@ int main(int argc, char** argv)
 
 	TextRenderer txt(WIDTH, HEIGHT);
 
-	Quad quad;
+	Quad quad("src/shaders/quad.vs", "src/shaders/quad.fs");
 	quad.init();
 
 	FrameBuffer framebuffer(WIDTH, HEIGHT);
+	Filter filter(WIDTH, HEIGHT, framebuffer.texture, framebuffer.normalTex, framebuffer.posTex);
 	GlfwSetter::framebuffer = &framebuffer;
 
+	ModelLoader loader("res/Scene/room.obj");
+	BVHContainer bvh(loader.triangles, loader.materialsVector, loader.emitters);
+
 	Camera camera(
-		glm::vec3(-4.0, 3.0, 3.0),
+		glm::vec3(0.0, 2.2, 3.0),
 		glm::vec3(0.0, 0.5, 0.0),
 		glm::vec3(0.0, 1.0, 0.0),
 		60.0,
@@ -39,8 +43,14 @@ int main(int argc, char** argv)
 	);
 	GlfwSetter::camera = &camera;
 
-	Tracer tracer(&camera, &framebuffer);
+	Tracer tracer(&camera, &framebuffer, &bvh);
 	GlfwSetter::importanceSampled = &tracer.importanceSampled;
+	GlfwSetter::useBlueNoise = &tracer.useBlueNoise;
+	GlfwSetter::maxAccumulateSamples = &tracer.maxAccumulateSamples;
+	GlfwSetter::accumulateSamples = &tracer.accumulateSamples;
+	GlfwSetter::freezeTime = &tracer.freezeTime;
+	GlfwSetter::iterations = &filter.iterations;
+	GlfwSetter::maxBounces = &tracer.maxBounces;
 	
 	FPSCounter fps;
 	fps.setTimerFreq(1000.0);
@@ -49,13 +59,17 @@ int main(int argc, char** argv)
 	while(!glfwWindowShouldClose(window))
 	{
 		tracer.trace(GlfwSetter::frameNumber);
-		//framebuffer.renderToFramebuffer();
-		//glClearColor(0.0f,0.0f,0.0f,0.0f);
-		//glClear(GL_COLOR_BUFFER_BIT);
-
-		framebuffer.setTextureRead();
-		framebuffer.renderToScreen();
+		if(GlfwSetter::filter)
+		{
+			filter.filter();
+			filter.setTextureRead();
+		} else
+		{
+			framebuffer.setTextureRead();
+		}
 		glClear(GL_COLOR_BUFFER_BIT);
+		quad.shader.use();
+		quad.shader.setFloat("exposure", GlfwSetter::exposure);
 		quad.render();
 
 		std::string str = "MSPF: ";
@@ -64,6 +78,9 @@ int main(int argc, char** argv)
 		str = "FPS: ";
 		str += std::to_string(fps.getFPS());
 		txt.RenderText(str, 25.0f, HEIGHT - 49.0f, 0.5f, glm::vec3(1.0f, 0.0f, 0.0f));
+		str = "Frames Rendered: ";
+		str += std::to_string(GlfwSetter::frameNumber);
+		txt.RenderText(str, 25.0f, HEIGHT - 73.0f, 0.5f, glm::vec3(1.0f, 0.0f, 0.0f));
 
 		GlfwSetter::frameNumber++;
 		glfwSwapBuffers(window);

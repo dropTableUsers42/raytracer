@@ -8,9 +8,13 @@
 #include "ComputeShader.hpp"
 #include "Camera.hpp"
 #include "Framebuffer.hpp"
+#include "stb_image.hpp"
+#include "BVH.hpp"
 
 #include <chrono>
 #include <ctime>
+#include <iostream>
+#include <fstream>
 
 class Tracer
 {
@@ -18,13 +22,25 @@ class Tracer
 	ComputeShader compute;
 	Camera *camera;
 	FrameBuffer *fbo;
+	GLuint blueNoiseTexture;
+	GLuint sobolBuffer, scrambleBuffer, rankingBuffer;
+	GLuint LtcMatTex, LtcMagTex;
 	glm::vec4 ray00, ray01, ray10, ray11;
 	void updateRays();
+	BVHContainer *bvh;
 public:
-	Tracer(Camera *camera, FrameBuffer *fbo);
+	Tracer(Camera *camera, FrameBuffer *fbo, BVHContainer *bvh);
+	void genBlueNoiseBuffers();
+	void genBlueNoiseTexes();
+	void genLtcData();
 	void trace(int frameNumber);
 
 	bool importanceSampled;
+	bool useBlueNoise;
+	bool freezeTime;
+	bool accumulateSamples;
+	int maxAccumulateSamples;
+	int maxBounces;
 };
 
 #endif

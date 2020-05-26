@@ -1,78 +1,65 @@
 #include "ComputeShader.hpp"
 
-ComputeShader::ComputeShader(const char* shaderPath, const char* extraShaderPath)
+ComputeShader::ComputeShader(std::vector<const char*> shaderPathVector)
 {
-	std::string shaderCode;
-	std::string extraShaderCode;
+
+	std::vector<std::string> shaderCode;
 	std::ifstream shaderFile;
-	std::ifstream extraShaderFile;
 
 	shaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
-	extraShaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
 	try
 	{
-		shaderFile.open(shaderPath);
-		if(extraShaderPath != NULL)
-			extraShaderFile.open(extraShaderPath);
-		std::stringstream shaderStream;
-		std::stringstream extraShaderStream;
+		for(auto it = shaderPathVector.begin(); it != shaderPathVector.end(); it++)
+		{
+			shaderFile.open(*it);
+			std::stringstream shaderStream;
 
-		shaderStream << shaderFile.rdbuf();
-		if(extraShaderPath != NULL)
-			extraShaderStream << extraShaderFile.rdbuf();
-
-		shaderFile.close();
-		if(extraShaderPath != NULL)
-			extraShaderFile.close();
-
-		shaderCode = shaderStream.str();
-		if(extraShaderPath != NULL)
-			extraShaderCode = extraShaderStream.str();
+			shaderStream << shaderFile.rdbuf();
+			shaderFile.close();
+			shaderCode.push_back(shaderStream.str());
+		}
 	}
 	catch(std::ifstream::failure e)
 	{
 		std::cerr << "ERROR::SHADER::FILE_NOT_SUCCESFULLY_READ" << std::endl;
 	}
 
-	const char* shader_Code = shaderCode.c_str();
-	const char* extraShader_Code = extraShaderCode.c_str();
+	std::vector<const char*> shader_Code;
 
-	unsigned int shader;
-	unsigned int extraShader;
+	for(auto it = shaderCode.begin(); it != shaderCode.end(); it++)
+	{
+		shader_Code.push_back(it->c_str());
+	}
+
+	std::vector<unsigned int> shader;
 	int success;
 	char infoLog[512];
 
-	shader = glCreateShader(GL_COMPUTE_SHADER);
-	glShaderSource(shader, 1, &shader_Code, NULL);
-	glCompileShader(shader);
-
-	if(extraShaderPath != NULL)
+	for(auto it = shader_Code.begin(); it != shader_Code.end(); it++)
 	{
-		extraShader = glCreateShader(GL_COMPUTE_SHADER);
-		glShaderSource(extraShader, 1, &extraShader_Code, NULL);
-		glCompileShader(extraShader);
+		int curShader;
+		curShader = glCreateShader(GL_COMPUTE_SHADER);
+		glShaderSource(curShader, 1, &(*it), NULL);
+		glCompileShader(curShader);
+		shader.push_back(curShader);
 	}
 
-	glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
-	if(!success)
+	for(auto it = shader.begin(); it != shader.end(); it++)
 	{
-		glGetShaderInfoLog(shader, 512, NULL, infoLog);
-		std::cerr << "ERROR::SHADER::COMPUTE::COMPILATION_FAILED\n" << infoLog << std::endl;
-	}
-	if(extraShaderPath != NULL)
-	{
-		glGetShaderiv(extraShader, GL_COMPILE_STATUS, &success);
+		glGetShaderiv(*it, GL_COMPILE_STATUS, &success);
 		if(!success)
 		{
-			glGetShaderInfoLog(extraShader, 512, NULL, infoLog);
+			glGetShaderInfoLog(*it, 512, NULL, infoLog);
 			std::cerr << "ERROR::SHADER::COMPUTE::COMPILATION_FAILED\n" << infoLog << std::endl;
 		}
 	}
 
 	ID = glCreateProgram();
-	glAttachShader(ID, shader);
-	if(extraShaderPath != NULL)
-		glAttachShader(ID, extraShader);
+
+	for(auto it = shader.begin(); it != shader.end(); it++)
+	{
+		glAttachShader(ID, *it);
+	}
 	glLinkProgram(ID);
 
 	glGetProgramiv(ID, GL_LINK_STATUS, &success);
@@ -82,8 +69,11 @@ ComputeShader::ComputeShader(const char* shaderPath, const char* extraShaderPath
 		std::cerr << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
 	}
 
-	glDeleteShader(shader);
-	glDeleteShader(extraShader);
+	for(auto it = shader.begin(); it != shader.end(); it++)
+	{
+		glDeleteShader(*it);
+	}
+
 	workGroupSize.resize(3);
 	glGetProgramiv(ID, GL_COMPUTE_WORK_GROUP_SIZE, &workGroupSize[0]);
 }

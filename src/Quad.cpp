@@ -1,6 +1,6 @@
 #include "Quad.hpp"
 
-Quad::Quad() : numVertices(4), numIndices(6), shader("src/shaders/quad.vs", "src/shaders/quad.fs")
+Quad::Quad(const char * vertexPath, const char * fragmentPath) : numVertices(4), numIndices(6), shader(vertexPath, fragmentPath)
 {
 	vertices.resize(numVertices);
 	vertices[0] = glm::vec2( 1.0f, 1.0f);

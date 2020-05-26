@@ -1,6 +1,8 @@
 #version 430 core
 
-layout(binding = 0, rgba32f) uniform image2D framebuffer;
+layout(location = 0, binding = 0, rgba32f) uniform image2D framebuffer;
+layout(location = 1, binding = 1, rgba8_snorm) uniform image2D normbuffer;
+layout(location = 2, binding = 2, rgba16f) uniform image2D posbuffer;
 
 uniform vec3 eye;
 uniform vec3 ray00;
@@ -35,7 +37,7 @@ struct box {
 #define LIGHT_INTENSITY 4.0
 #define SKY_COLOR vec3(0.89, 0.96, 1.00)
 
-float random(vec3 f);
+float random3(vec3 f);
 vec4 randomHemispherePoint(vec3 n, vec2 rand);
 vec4 randomCosineWeightedHemispherePoint(vec3 n, vec2 rand);
 vec4 randomPhongWeightedHemispherePoint(vec3 r, float a, vec2 rand);
@@ -93,9 +95,9 @@ bool intersectBoxes(vec3 origin, vec3 dir, out hitinfo info) {
 vec3 randvec3(int s)
 {
     return vec3(
-        random(vec3(px + ivec2(s), time)),
-        random(vec3(px + ivec2(s), time + 1.1)),
-        random(vec3(px + ivec2(s), time + 0.3))
+        random3(vec3(px + ivec2(s), time)),
+        random3(vec3(px + ivec2(s), time + 1.1)),
+        random3(vec3(px + ivec2(s), time + 0.3))
     );
 }
 
@@ -117,6 +119,12 @@ vec3 brdf(box b, vec3 i, vec3 o, vec3 n)
             +
             brdfDiffuse(b, i, o, n) * (1.0 - specularFactor);
 
+}
+
+void write(vec3 p, vec3 n)
+{
+    imageStore(normbuffer, px, vec4(n, 0.0));
+    imageStore(posbuffer, px, vec4(p, 1.0));
 }
 
 /*vec4 trace(vec3 origin, vec3 dir) {
@@ -161,7 +169,10 @@ vec3 trace(vec3 origin, vec3 dir) {
        */
         float d = dir.y;
         if(bounce == 0)
+        {
+            write(vec3(0.0), vec3(0.0));
             return SKY_COLOR * att;
+        }
         return LIGHT_INTENSITY * SKY_COLOR * att * d;
     }
     /*
@@ -182,6 +193,10 @@ vec3 trace(vec3 origin, vec3 dir) {
      * at the point of intersection.
      */
     vec3 normal = hinfo.normal;
+    if(bounce == 0)
+    {
+        write(point, normal);
+    }
     /*
      * Next, we reset the ray's origin to the point of intersection
      * offset by a small epsilon along the surface normal to avoid

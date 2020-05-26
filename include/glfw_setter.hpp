@@ -16,6 +16,8 @@ class GlfwSetter
 	static int width;
 	static int height;
 
+	static float camHeight;
+
 	static int lastX, lastY;
 	static float yaw, pitch;
 	static bool firstMouse;
@@ -30,9 +32,17 @@ public:
 
 	static FrameBuffer *framebuffer;
 	static Camera *camera;
+	static int *iterations;
 	static bool *importanceSampled;
+	static bool *useBlueNoise;
 	static int frameNumber;
 	static float distMoved;
+	static int *maxAccumulateSamples;
+	static bool *accumulateSamples;
+	static bool *freezeTime;
+	static bool filter;
+	static int *maxBounces;
+	static float exposure;
 };
 
 #endif

@@ -27,85 +27,88 @@ obj/main.o: src/main.cpp include/main.hpp include/glm/glm/vec3.hpp \
  include/glm/glm/./ext/vector_int4.hpp \
  include/glm/glm/./ext/vector_int4_precision.hpp \
  include/glm/glm/./ext/vector_uint4.hpp \
- include/glm/glm/./ext/vector_uint4_precision.hpp include/FPSCounter.hpp \
- include/glfw_setter.hpp include/Framebuffer.hpp include/glm/glm/vec2.hpp \
- include/glm/glm/./ext/vector_bool2.hpp \
- include/glm/glm/./ext/../detail/type_vec2.hpp \
- include/glm/glm/./ext/../detail/type_vec2.inl \
- include/glm/glm/./ext/vector_bool2_precision.hpp \
- include/glm/glm/./ext/vector_float2.hpp \
- include/glm/glm/./ext/vector_float2_precision.hpp \
- include/glm/glm/./ext/vector_double2.hpp \
- include/glm/glm/./ext/vector_double2_precision.hpp \
- include/glm/glm/./ext/vector_int2.hpp \
- include/glm/glm/./ext/vector_int2_precision.hpp \
- include/glm/glm/./ext/vector_uint2.hpp \
- include/glm/glm/./ext/vector_uint2_precision.hpp include/stb_image.hpp \
- include/stb_image_write.hpp include/Camera.hpp \
- include/glm/glm/mat4x4.hpp include/glm/glm/./ext/matrix_double4x4.hpp \
- include/glm/glm/./ext/../detail/type_mat4x4.hpp \
- include/glm/glm/./ext/../detail/type_mat4x4.inl \
- include/glm/glm/./ext/../detail/../matrix.hpp \
- include/glm/glm/./ext/../detail/../detail/setup.hpp \
- include/glm/glm/./ext/../detail/../mat2x2.hpp \
- include/glm/glm/./ext/../detail/.././ext/matrix_double2x2.hpp \
- include/glm/glm/./ext/../detail/.././ext/../detail/type_mat2x2.hpp \
- include/glm/glm/./ext/../detail/.././ext/../detail/type_mat2x2.inl \
- include/glm/glm/./ext/../detail/.././ext/matrix_double2x2_precision.hpp \
- include/glm/glm/./ext/../detail/.././ext/matrix_float2x2.hpp \
- include/glm/glm/./ext/../detail/.././ext/matrix_float2x2_precision.hpp \
- include/glm/glm/./ext/../detail/../mat2x3.hpp \
- include/glm/glm/./ext/../detail/.././ext/matrix_double2x3.hpp \
- include/glm/glm/./ext/../detail/.././ext/../detail/type_mat2x3.hpp \
- include/glm/glm/./ext/../detail/.././ext/../detail/type_mat2x3.inl \
- include/glm/glm/./ext/../detail/.././ext/matrix_double2x3_precision.hpp \
- include/glm/glm/./ext/../detail/.././ext/matrix_float2x3.hpp \
- include/glm/glm/./ext/../detail/.././ext/matrix_float2x3_precision.hpp \
- include/glm/glm/./ext/../detail/../mat2x4.hpp \
- include/glm/glm/./ext/../detail/.././ext/matrix_double2x4.hpp \
- include/glm/glm/./ext/../detail/.././ext/../detail/type_mat2x4.hpp \
- include/glm/glm/./ext/../detail/.././ext/../detail/type_mat2x4.inl \
- include/glm/glm/./ext/../detail/.././ext/matrix_double2x4_precision.hpp \
- include/glm/glm/./ext/../detail/.././ext/matrix_float2x4.hpp \
- include/glm/glm/./ext/../detail/.././ext/matrix_float2x4_precision.hpp \
- include/glm/glm/./ext/../detail/../mat3x2.hpp \
- include/glm/glm/./ext/../detail/.././ext/matrix_double3x2.hpp \
- include/glm/glm/./ext/../detail/.././ext/../detail/type_mat3x2.hpp \
- include/glm/glm/./ext/../detail/.././ext/../detail/type_mat3x2.inl \
- include/glm/glm/./ext/../detail/.././ext/matrix_double3x2_precision.hpp \
- include/glm/glm/./ext/../detail/.././ext/matrix_float3x2.hpp \
- include/glm/glm/./ext/../detail/.././ext/matrix_float3x2_precision.hpp \
- include/glm/glm/./ext/../detail/../mat3x3.hpp \
- include/glm/glm/./ext/../detail/.././ext/matrix_double3x3.hpp \
- include/glm/glm/./ext/../detail/.././ext/../detail/type_mat3x3.hpp \
- include/glm/glm/./ext/../detail/.././ext/../detail/type_mat3x3.inl \
- include/glm/glm/./ext/../detail/.././ext/matrix_double3x3_precision.hpp \
- include/glm/glm/./ext/../detail/.././ext/matrix_float3x3.hpp \
- include/glm/glm/./ext/../detail/.././ext/matrix_float3x3_precision.hpp \
- include/glm/glm/./ext/../detail/../mat3x4.hpp \
- include/glm/glm/./ext/../detail/.././ext/matrix_double3x4.hpp \
- include/glm/glm/./ext/../detail/.././ext/../detail/type_mat3x4.hpp \
- include/glm/glm/./ext/../detail/.././ext/../detail/type_mat3x4.inl \
- include/glm/glm/./ext/../detail/.././ext/matrix_double3x4_precision.hpp \
- include/glm/glm/./ext/../detail/.././ext/matrix_float3x4.hpp \
- include/glm/glm/./ext/../detail/.././ext/matrix_float3x4_precision.hpp \
- include/glm/glm/./ext/../detail/../mat4x2.hpp \
- include/glm/glm/./ext/../detail/.././ext/matrix_double4x2.hpp \
- include/glm/glm/./ext/../detail/.././ext/../detail/type_mat4x2.hpp \
- include/glm/glm/./ext/../detail/.././ext/../detail/type_mat4x2.inl \
- include/glm/glm/./ext/../detail/.././ext/matrix_double4x2_precision.hpp \
- include/glm/glm/./ext/../detail/.././ext/matrix_float4x2.hpp \
- include/glm/glm/./ext/../detail/.././ext/matrix_float4x2_precision.hpp \
- include/glm/glm/./ext/../detail/../mat4x3.hpp \
- include/glm/glm/./ext/../detail/.././ext/matrix_double4x3.hpp \
- include/glm/glm/./ext/../detail/.././ext/../detail/type_mat4x3.hpp \
- include/glm/glm/./ext/../detail/.././ext/../detail/type_mat4x3.inl \
- include/glm/glm/./ext/../detail/.././ext/matrix_double4x3_precision.hpp \
- include/glm/glm/./ext/../detail/.././ext/matrix_float4x3.hpp \
- include/glm/glm/./ext/../detail/.././ext/matrix_float4x3_precision.hpp \
- include/glm/glm/./ext/../detail/../detail/func_matrix.inl \
- include/glm/glm/./ext/../detail/../detail/../geometric.hpp \
- include/glm/glm/./ext/../detail/../detail/../detail/func_geometric.inl \
+ include/glm/glm/./ext/vector_uint4_precision.hpp \
+ include/glm/glm/gtx/string_cast.hpp include/glm/glm/gtx/../glm.hpp \
+ include/glm/glm/gtx/../detail/_fixes.hpp \
+ include/glm/glm/gtx/../detail/setup.hpp include/glm/glm/gtx/../fwd.hpp \
+ include/glm/glm/gtx/../vec2.hpp \
+ include/glm/glm/gtx/.././ext/vector_bool2.hpp \
+ include/glm/glm/gtx/.././ext/../detail/type_vec2.hpp \
+ include/glm/glm/gtx/.././ext/../detail/type_vec2.inl \
+ include/glm/glm/gtx/.././ext/vector_bool2_precision.hpp \
+ include/glm/glm/gtx/.././ext/vector_float2.hpp \
+ include/glm/glm/gtx/.././ext/vector_float2_precision.hpp \
+ include/glm/glm/gtx/.././ext/vector_double2.hpp \
+ include/glm/glm/gtx/.././ext/vector_double2_precision.hpp \
+ include/glm/glm/gtx/.././ext/vector_int2.hpp \
+ include/glm/glm/gtx/.././ext/vector_int2_precision.hpp \
+ include/glm/glm/gtx/.././ext/vector_uint2.hpp \
+ include/glm/glm/gtx/.././ext/vector_uint2_precision.hpp \
+ include/glm/glm/gtx/../mat2x2.hpp \
+ include/glm/glm/gtx/.././ext/matrix_double2x2.hpp \
+ include/glm/glm/gtx/.././ext/../detail/type_mat2x2.hpp \
+ include/glm/glm/gtx/.././ext/../detail/type_mat2x2.inl \
+ include/glm/glm/gtx/.././ext/../detail/../matrix.hpp \
+ include/glm/glm/gtx/.././ext/../detail/../detail/setup.hpp \
+ include/glm/glm/gtx/.././ext/../detail/../mat2x3.hpp \
+ include/glm/glm/gtx/.././ext/../detail/.././ext/matrix_double2x3.hpp \
+ include/glm/glm/gtx/.././ext/../detail/.././ext/../detail/type_mat2x3.hpp \
+ include/glm/glm/gtx/.././ext/../detail/.././ext/../detail/type_mat2x3.inl \
+ include/glm/glm/gtx/.././ext/../detail/.././ext/matrix_double2x3_precision.hpp \
+ include/glm/glm/gtx/.././ext/../detail/.././ext/matrix_float2x3.hpp \
+ include/glm/glm/gtx/.././ext/../detail/.././ext/matrix_float2x3_precision.hpp \
+ include/glm/glm/gtx/.././ext/../detail/../mat2x4.hpp \
+ include/glm/glm/gtx/.././ext/../detail/.././ext/matrix_double2x4.hpp \
+ include/glm/glm/gtx/.././ext/../detail/.././ext/../detail/type_mat2x4.hpp \
+ include/glm/glm/gtx/.././ext/../detail/.././ext/../detail/type_mat2x4.inl \
+ include/glm/glm/gtx/.././ext/../detail/.././ext/matrix_double2x4_precision.hpp \
+ include/glm/glm/gtx/.././ext/../detail/.././ext/matrix_float2x4.hpp \
+ include/glm/glm/gtx/.././ext/../detail/.././ext/matrix_float2x4_precision.hpp \
+ include/glm/glm/gtx/.././ext/../detail/../mat3x2.hpp \
+ include/glm/glm/gtx/.././ext/../detail/.././ext/matrix_double3x2.hpp \
+ include/glm/glm/gtx/.././ext/../detail/.././ext/../detail/type_mat3x2.hpp \
+ include/glm/glm/gtx/.././ext/../detail/.././ext/../detail/type_mat3x2.inl \
+ include/glm/glm/gtx/.././ext/../detail/.././ext/matrix_double3x2_precision.hpp \
+ include/glm/glm/gtx/.././ext/../detail/.././ext/matrix_float3x2.hpp \
+ include/glm/glm/gtx/.././ext/../detail/.././ext/matrix_float3x2_precision.hpp \
+ include/glm/glm/gtx/.././ext/../detail/../mat3x3.hpp \
+ include/glm/glm/gtx/.././ext/../detail/.././ext/matrix_double3x3.hpp \
+ include/glm/glm/gtx/.././ext/../detail/.././ext/../detail/type_mat3x3.hpp \
+ include/glm/glm/gtx/.././ext/../detail/.././ext/../detail/type_mat3x3.inl \
+ include/glm/glm/gtx/.././ext/../detail/.././ext/matrix_double3x3_precision.hpp \
+ include/glm/glm/gtx/.././ext/../detail/.././ext/matrix_float3x3.hpp \
+ include/glm/glm/gtx/.././ext/../detail/.././ext/matrix_float3x3_precision.hpp \
+ include/glm/glm/gtx/.././ext/../detail/../mat3x4.hpp \
+ include/glm/glm/gtx/.././ext/../detail/.././ext/matrix_double3x4.hpp \
+ include/glm/glm/gtx/.././ext/../detail/.././ext/../detail/type_mat3x4.hpp \
+ include/glm/glm/gtx/.././ext/../detail/.././ext/../detail/type_mat3x4.inl \
+ include/glm/glm/gtx/.././ext/../detail/.././ext/matrix_double3x4_precision.hpp \
+ include/glm/glm/gtx/.././ext/../detail/.././ext/matrix_float3x4.hpp \
+ include/glm/glm/gtx/.././ext/../detail/.././ext/matrix_float3x4_precision.hpp \
+ include/glm/glm/gtx/.././ext/../detail/../mat4x2.hpp \
+ include/glm/glm/gtx/.././ext/../detail/.././ext/matrix_double4x2.hpp \
+ include/glm/glm/gtx/.././ext/../detail/.././ext/../detail/type_mat4x2.hpp \
+ include/glm/glm/gtx/.././ext/../detail/.././ext/../detail/type_mat4x2.inl \
+ include/glm/glm/gtx/.././ext/../detail/.././ext/matrix_double4x2_precision.hpp \
+ include/glm/glm/gtx/.././ext/../detail/.././ext/matrix_float4x2.hpp \
+ include/glm/glm/gtx/.././ext/../detail/.././ext/matrix_float4x2_precision.hpp \
+ include/glm/glm/gtx/.././ext/../detail/../mat4x3.hpp \
+ include/glm/glm/gtx/.././ext/../detail/.././ext/matrix_double4x3.hpp \
+ include/glm/glm/gtx/.././ext/../detail/.././ext/../detail/type_mat4x3.hpp \
+ include/glm/glm/gtx/.././ext/../detail/.././ext/../detail/type_mat4x3.inl \
+ include/glm/glm/gtx/.././ext/../detail/.././ext/matrix_double4x3_precision.hpp \
+ include/glm/glm/gtx/.././ext/../detail/.././ext/matrix_float4x3.hpp \
+ include/glm/glm/gtx/.././ext/../detail/.././ext/matrix_float4x3_precision.hpp \
+ include/glm/glm/gtx/.././ext/../detail/../mat4x4.hpp \
+ include/glm/glm/gtx/.././ext/../detail/.././ext/matrix_double4x4.hpp \
+ include/glm/glm/gtx/.././ext/../detail/.././ext/../detail/type_mat4x4.hpp \
+ include/glm/glm/gtx/.././ext/../detail/.././ext/../detail/type_mat4x4.inl \
+ include/glm/glm/gtx/.././ext/../detail/.././ext/matrix_double4x4_precision.hpp \
+ include/glm/glm/gtx/.././ext/../detail/.././ext/matrix_float4x4.hpp \
+ include/glm/glm/gtx/.././ext/../detail/.././ext/matrix_float4x4_precision.hpp \
+ include/glm/glm/gtx/.././ext/../detail/../detail/func_matrix.inl \
+ include/glm/glm/gtx/.././ext/../detail/../detail/../geometric.hpp \
+ include/glm/glm/gtx/.././ext/../detail/../detail/../detail/func_geometric.inl \
  d:\acads\programming\opengl\raytracing\include\glm\glm\exponential.hpp \
  d:\acads\programming\opengl\raytracing\include\glm\glm\detail/type_vec1.hpp \
  d:\acads\programming\opengl\raytracing\include\glm\glm\detail/type_vec1.inl \
@@ -119,28 +122,11 @@ obj/main.o: src/main.cpp include/main.hpp include/glm/glm/vec3.hpp \
  d:\acads\programming\opengl\raytracing\include\glm\glm\detail/func_common.inl \
  d:\acads\programming\opengl\raytracing\include\glm\glm\detail/compute_common.hpp \
  d:\acads\programming\opengl\raytracing\include\glm\glm\detail/setup.hpp \
- include/glm/glm/./ext/matrix_double4x4_precision.hpp \
- include/glm/glm/./ext/matrix_float4x4.hpp \
- include/glm/glm/./ext/matrix_float4x4_precision.hpp \
- include/glm/glm/gtc/matrix_transform.hpp \
- include/glm/glm/gtc/../ext/matrix_projection.hpp \
- include/glm/glm/gtc/../ext/../gtc/constants.hpp \
- include/glm/glm/gtc/../ext/../gtc/../ext/scalar_constants.hpp \
- include/glm/glm/gtc/../ext/../gtc/../ext/../detail/setup.hpp \
- include/glm/glm/gtc/../ext/../gtc/../ext/scalar_constants.inl \
- include/glm/glm/gtc/../ext/../gtc/constants.inl \
- include/glm/glm/gtc/../ext/../trigonometric.hpp \
- include/glm/glm/gtc/../ext/../detail/setup.hpp \
- include/glm/glm/gtc/../ext/../detail/func_trigonometric.inl \
- include/glm/glm/gtc/../ext/matrix_projection.inl \
- include/glm/glm/gtc/../ext/matrix_clip_space.hpp \
- include/glm/glm/gtc/../ext/matrix_clip_space.inl \
- include/glm/glm/gtc/../ext/matrix_transform.hpp \
- include/glm/glm/gtc/../ext/matrix_transform.inl \
- include/glm/glm/gtc/matrix_transform.inl \
- include/glm/glm/gtx/string_cast.hpp include/glm/glm/gtx/../glm.hpp \
- include/glm/glm/gtx/../detail/_fixes.hpp \
- include/glm/glm/gtx/../detail/setup.hpp include/glm/glm/gtx/../fwd.hpp \
+ include/glm/glm/gtx/.././ext/matrix_double2x2_precision.hpp \
+ include/glm/glm/gtx/.././ext/matrix_float2x2.hpp \
+ include/glm/glm/gtx/.././ext/matrix_float2x2_precision.hpp \
+ include/glm/glm/gtx/../trigonometric.hpp \
+ include/glm/glm/gtx/../detail/func_trigonometric.inl \
  include/glm/glm/gtx/../packing.hpp \
  include/glm/glm/gtx/../detail/func_packing.inl \
  include/glm/glm/gtx/../detail/type_half.hpp \
@@ -150,6 +136,19 @@ obj/main.o: src/main.cpp include/main.hpp include/glm/glm/vec3.hpp \
  include/glm/glm/gtx/../detail/func_integer.inl \
  include/glm/glm/gtx/../gtc/type_precision.hpp \
  include/glm/glm/gtx/../gtc/../gtc/quaternion.hpp \
+ include/glm/glm/gtx/../gtc/../gtc/../gtc/constants.hpp \
+ include/glm/glm/gtx/../gtc/../gtc/../gtc/../ext/scalar_constants.hpp \
+ include/glm/glm/gtx/../gtc/../gtc/../gtc/../ext/../detail/setup.hpp \
+ include/glm/glm/gtx/../gtc/../gtc/../gtc/../ext/scalar_constants.inl \
+ include/glm/glm/gtx/../gtc/../gtc/../gtc/constants.inl \
+ include/glm/glm/gtx/../gtc/../gtc/../gtc/matrix_transform.hpp \
+ include/glm/glm/gtx/../gtc/../gtc/../gtc/../ext/matrix_projection.hpp \
+ include/glm/glm/gtx/../gtc/../gtc/../gtc/../ext/matrix_projection.inl \
+ include/glm/glm/gtx/../gtc/../gtc/../gtc/../ext/matrix_clip_space.hpp \
+ include/glm/glm/gtx/../gtc/../gtc/../gtc/../ext/matrix_clip_space.inl \
+ include/glm/glm/gtx/../gtc/../gtc/../gtc/../ext/matrix_transform.hpp \
+ include/glm/glm/gtx/../gtc/../gtc/../gtc/../ext/matrix_transform.inl \
+ include/glm/glm/gtx/../gtc/../gtc/../gtc/matrix_transform.inl \
  include/glm/glm/gtx/../gtc/../gtc/../ext/vector_relational.hpp \
  include/glm/glm/gtx/../gtc/../gtc/../ext/vector_relational.inl \
  include/glm/glm/gtx/../gtc/../gtc/../ext/../detail/type_float.hpp \
@@ -191,7 +190,9 @@ obj/main.o: src/main.cpp include/main.hpp include/glm/glm/vec3.hpp \
  include/glm/glm/gtx/../gtc/type_precision.inl \
  include/glm/glm/gtx/../gtx/dual_quaternion.hpp \
  include/glm/glm/gtx/../gtx/dual_quaternion.inl \
- include/glm/glm/gtx/string_cast.inl include/Shader.hpp \
+ include/glm/glm/gtx/string_cast.inl include/FPSCounter.hpp \
+ include/glfw_setter.hpp include/Framebuffer.hpp include/stb_image.hpp \
+ include/stb_image_write.hpp include/Camera.hpp include/Shader.hpp \
  include/glm/glm/gtc/type_ptr.hpp include/glm/glm/gtc/type_ptr.inl \
  include/Quad.hpp include/Object.hpp include/TextRenderer.hpp \
  C:/FREETYPE/freetype-2.9/include/ft2build.h \
@@ -206,4 +207,5 @@ obj/main.o: src/main.cpp include/main.hpp include/glm/glm/vec3.hpp \
  C:/FREETYPE/freetype-2.9/include/freetype/fterrors.h \
  C:/FREETYPE/freetype-2.9/include/freetype/ftmoderr.h \
  C:/FREETYPE/freetype-2.9/include/freetype/fterrdef.h \
- include/ComputeShader.hpp include/Tracer.hpp
+ include/ComputeShader.hpp include/Tracer.hpp include/BVH.hpp \
+ include/Material.hpp include/filter.hpp include/ModelLoader.hpp

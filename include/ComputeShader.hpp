@@ -12,6 +12,8 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
+#include <cstdarg>
+#include <vector>
 
 class ComputeShader
 {
@@ -19,7 +21,7 @@ public:
 	GLuint ID;
 	std::vector<GLint> workGroupSize;
 
-	ComputeShader(const char* shaderPath, const char* extraShaderPath = NULL);
+	ComputeShader(std::vector<const char*> shaderPathVector);
 	void use();
 	void setBool(const std::string &name, bool value) const;
 	void setInt(const std::string &name, int value) const;

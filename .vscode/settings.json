@@ -1,5 +1,6 @@
 {
     "files.associations": {
+        "*.glslcs": "glsl",
         "array": "cpp",
         "atomic": "cpp",
         "bit": "cpp",
@@ -46,6 +47,12 @@
         "streambuf": "cpp",
         "cinttypes": "cpp",
         "typeinfo": "cpp",
-        "cstring": "cpp"
+        "cstring": "cpp",
+        "chrono": "cpp",
+        "ctime": "cpp",
+        "list": "cpp",
+        "set": "cpp",
+        "ratio": "cpp",
+        "iomanip": "cpp"
     }
 }

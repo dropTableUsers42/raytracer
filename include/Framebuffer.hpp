@@ -5,6 +5,7 @@
 
 #include <iostream>
 #include <string>
+#include <fstream>
 
 #include <glm/glm/vec2.hpp>
 
@@ -17,6 +18,7 @@ class FrameBuffer
 	GLuint width, height;
 public:
 	GLuint texture;
+	GLuint normalTex, posTex;
 
 	FrameBuffer(int width, int height);
 	void createTextureAttachment(int width, int height);

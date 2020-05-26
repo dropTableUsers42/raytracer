@@ -1,6 +1,15 @@
 #version 430 core
 
-layout(binding = 0, rgba32f) uniform image2D framebuffer;
+#if GL_NV_gpu_shader5
+#extension GL_NV_gpu_shader5 : enable
+#elif GL_EXT_shader_8bit_storage
+#extension GL_EXT_shader_8bit_storage : enable
+#endif
+
+layout(location = 0, binding = 0, rgba32f) uniform image2D framebuffer;
+layout(location = 1, binding = 1, rgba8_snorm) uniform image2D normbuffer;
+layout(location = 2, binding = 2, rgba16f) uniform image2D posbuffer;
+uniform sampler2D blueNoiseTex;
 
 uniform vec3 eye;
 uniform vec3 ray00;
@@ -16,14 +25,24 @@ uniform bool multipleImportanceSampled;
 
 uniform bool importanceSampled;
 
+uniform bool useBlueNoise;
+
 uniform float phongExponent;
 
 uniform float specularFactor;
+
+uniform int frameIndex;
 
 struct box {
     vec3 min;
     vec3 max;
     vec3 col;
+};
+
+struct rectangle {
+    vec3 c;
+    vec3 x;
+    vec3 y;
 };
 
 struct sphere {
@@ -33,24 +52,45 @@ struct sphere {
 
 #define NUM_BOXES 11
 #define NUM_SPHERES 1
+#define NUM_RECTANGLES 1
 #define LARGE_FLOAT 1E+10
-#define EPSILON 0.0001
+#define EPSILON 1E-4
+#define BOUNCES 5
 
 #define PI radians(180.0)
 #define ONE_OVER_PI 1.0/PI
 #define ONE_OVER_2PI 1.0/(2*PI)
 
-#define LIGHT_INTENSITY 2000.0
-#define PROBABILITY_OF_LIGHT_SAMPLE 0.7
+#define LIGHT_INTENSITY 80.0
+#define PROBABILITY_OF_LIGHT_SAMPLE 0.6
 #define SKY_COLOR vec3(0.89, 0.96, 1.00)
 
-float random(vec3 f);
+uint hash3(uint x, uint y, uint z);
+float random3(vec3 f);
+float random2(vec2 f);
 vec4 randomHemispherePoint(vec3 n, vec2 rand);
 float hemisphereProbability(vec3 n, vec3 v);
 vec4 randomDiskPoint(vec3 n, float d, float r, vec2 rand);
 float diskProbability(vec3 n, float d, float r, vec3 v);
 vec4 randomCosineWeightedHemispherePoint(vec3 n, vec2 rand);
+float randomCosineWeightedHemispherePDF(vec3 n, vec3 v);
 vec4 randomPhongWeightedHemispherePoint(vec3 r, float a, vec2 rand);
+float randomPhongWeightedHemispherePDF(vec3 r, float a, vec3 v);
+vec4 randomRectangleAreaDirection(vec3 p, vec3 c, vec3 x, vec3 y, vec2 rand);
+float randomRectangleAreaDirectionPDF(vec3 p, vec3 x, vec3 x, vec3 y, vec3 v);
+bool inrect(vec3 p, vec3 c, vec3 x, vec3 y);
+
+layout(std430, binding = 0) readonly buffer SobolBuffer {
+    uint8_t[] sobols;
+};
+
+layout(std430, binding = 1) readonly buffer ScrambleBuffer {
+    uint8_t[] scrambles;
+};
+
+layout(std430, binding = 2) readonly buffer RankingBuffer {
+    uint8_t[] rankings;
+};
 
 const box boxes[] = {
     {vec3(-5.0,-1.0,-5.0), vec3(5.0,0.0,5.0), vec3(0.5, 0.45, 0.33)}, // floor
@@ -66,8 +106,19 @@ const box boxes[] = {
     {vec3(3.0, 0.0, -4.9), vec3(3.3, 2.0, -4.6), vec3(1.0, 0.0, 0.0)}, // a pillar
 };
 
+const rectangle rectangles[NUM_RECTANGLES] = {
+    {vec3(-3.0, 0.3, 3.0), vec3(6.0, 0.0, 0.0), vec3(0.0, -0.2, 0.05)}
+};
+
 const sphere spheres[NUM_SPHERES] = {
     {vec3(0.0, 3.0, 0.0), 0.1}
+};
+
+struct hitinfo {
+    vec3 normal;
+    float near;
+    int bi;
+    bool isRectangle;
 };
 
 vec2 intersectBox(vec3 origin, vec3 dir, const box b, out vec3 normal)
@@ -97,12 +148,13 @@ vec2 intersectSphere(vec3 origin, vec3 dir, const sphere s)
     return vec2(-1.0);
 }
 
-struct hitinfo {
-    vec3 normal;
-    float near;
-    int bi;
-    bool isSphere;
-};
+bool intersectRectangle(vec3 origin, vec3 dir, rectangle r, out hitinfo hinfo)
+{
+    vec3 n = cross(r.x, r.y);
+    float den = dot(n, dir), t = dot(r.c - origin, n) / den;
+    hinfo.near = t;
+    return den < 0.0 && t > 0.0 && inrect(origin + t * dir, r.c, r.x, r.y);
+}
 
 ivec2 px;
 
@@ -115,21 +167,21 @@ bool intersectObjects(vec3 origin, vec3 dir, out hitinfo info) {
         if(lambda.x > 0.0 && lambda.x < lambda.y && lambda.x < smallest) {
             info.near = lambda.x;
             info.bi = i;
-            info.isSphere = false;
+            info.isRectangle = false;
             info.normal = normal;
             smallest = lambda.x;
             found = true;
         }
     }
 
-    for(int i=0; i < NUM_SPHERES; i++) {
-        vec2 lambda = intersectSphere(origin, dir, spheres[i]);
-        if(lambda.y >= 0.0 && lambda.x < lambda.y && lambda.x < smallest)
+    for(int i=0; i < NUM_RECTANGLES; i++) {
+        hitinfo hinfo;
+        if(intersectRectangle(origin, dir, rectangles[i], hinfo) && hinfo.near < smallest)
         {
-            info.near = lambda.x;
+            info.near = hinfo.near;
             info.bi = i;
-            info.isSphere = true;
-            smallest = lambda.x;
+            info.isRectangle= true;
+            smallest = hinfo.near;
             found = true;
         }
     }
@@ -141,13 +193,53 @@ vec3 normalForSphere(vec3 hit, const sphere s)
     return normalize(hit - s.c);
 }
 
-vec3 randvec3(int s)
+vec3 normalForRectangle(vec3 hit, const rectangle r)
+{
+    return cross(r.x, r.y);
+}
+
+float sampleBlueNoise(uint sampleDimension)
+{
+    uint xoff = hash3(px.y >> 7u, px.x >> 7u, frameIndex >> 8u);
+    uint yoff = hash3(px.x >> 7u, px.y >> 7u, frameIndex >> 8u);
+    uvec2 pxo = (px + ivec2(xoff, yoff)) & 127u;
+    uint sampleIndex = frameIndex & 255u;
+    sampleDimension = sampleDimension & 255u;
+    uint pxv = (pxo.x + (pxo.y << 7u)) << 3u;
+    uint rankedSampleIndex = sampleIndex ^ rankings[sampleDimension + pxv];
+    uint value = sobols[sampleDimension + (rankedSampleIndex << 8u)];
+    value ^= scrambles[(sampleDimension & 7u) + pxv];
+    return (0.5 + float(value)) / 256.0;
+}
+
+vec3 randBlueNoise(int s)
+{
+    /*
+    vec2 o = vec2(
+        random2(vec2(s, time)),
+        random2(vec2(s, time * 1.3)));
+    vec3 bn = texture(blueNoiseTex, o + vec2(px) / textureSize(blueNoiseTex, 0)).rgb;
+    return fract(bn + time);
+    */
+    return vec3(
+        sampleBlueNoise(3*s),
+        sampleBlueNoise(3*s + 1),
+        sampleBlueNoise(3*s + 2)
+    );
+}
+
+vec3 randWhiteNoise(int s)
 {
     return vec3(
-        random(vec3(px + ivec2(s), time)),
-        random(vec3(px + ivec2(s), time + 1.1)),
-        random(vec3(px + ivec2(s), time + 0.3))
+        random3(vec3(px + ivec2(s), time)),
+        random3(vec3(px + ivec2(s), time * 1.1)),
+        random3(vec3(px + ivec2(s), time * 0.3))
     );
+}
+
+vec3 randvec3(int s)
+{
+    return useBlueNoise ? randBlueNoise(s) : randWhiteNoise(s);
 }
 
 vec3 brdfSpecular(vec3 i, vec3 o, vec3 n)
@@ -170,89 +262,88 @@ vec3 brdf(vec3 albedo, vec3 i, vec3 o, vec3 n)
 
 }
 
+void write(vec3 p, vec3 n)
+{
+    imageStore(normbuffer, px, vec4(n, 0.0));
+    imageStore(posbuffer, px, vec4(p, 1.0));
+}
+
 vec3 trace(vec3 origin, vec3 dir) {
-  /*
-   * Since we are tracing a light ray "back" from the eye/camera into
-   * the scene, everytime we hit a box surface, we need to remember the
-   * attenuation the light would take because of the albedo (fraction of
-   * light not absorbed) of the surface it reflected off of. At the
-   * beginning, this value will be 1.0 since when we start, the ray has
-   * not yet touched any surface.
-   */
+
   vec3 att = vec3(1.0);
-  /*
-   * We are following a ray a fixed number of bounces through the scene.
-   * Since every time the ray intersects a box, the steps that need to
-   * be done at every such intersection are the same, we use a simple
-   * for loop. The first iteration where `bounce == 0` will process our
-   * primary ray starting directly from the eye/camera through the
-   * framebuffer pixel into the scene. Let's go...
-   */
-  for (int bounce = 0; bounce < 3; bounce++) {
-    /*
-     * The ray now travels through the scene of boxes and eventually
-     * either hits a box or escapes through the open ceiling. So, test
-     * which case it is going to be.
-     */
+
+  for (int bounce = 0; bounce < BOUNCES; bounce++)
+  {
+
     hitinfo hinfo;
+
     if (!intersectObjects(origin, dir, hinfo)) {
-      /*
-       * The ray did not hit any box in the scene, so it escaped through
-       * the open ceiling to the outside world, which is assumed to
-       * consist of nothing but light coming in from everywhere. Return
-       * the attenuated sky color.
-       */
+        if(bounce == 0)
+        {
+            write(vec3(0.0), vec3(0.0));
+        }
         return vec3(0.0);
     }
-    /*
-     * When we are here, the ray we are currently processing hit a box.
-     * Obtain the box from the index in the hitinfo.
-     */
-    /*
-     * Next, we need the actual point of intersection. So evaluate the
-     * ray equation `point = origin + t * dir` with 't' being the value
-     * returned by intersectBoxes() in the hitinfo.
-     */
+
     vec3 point = origin + hinfo.near * dir;
     vec3 normal, albedo;
-    if (hinfo.isSphere)
+
+    if (hinfo.isRectangle)
     {
-        const sphere s = spheres[hinfo.bi];
-        return att * LIGHT_INTENSITY * dot(normalForSphere(point, s), -dir);
+        const rectangle r = rectangles[hinfo.bi];
+        if(bounce == 0)
+        {
+            write(point, normalForRectangle(point, r));
+        }
+        return att * LIGHT_INTENSITY;
     } else
     {
         const box b = boxes[hinfo.bi];
         normal = hinfo.normal;
         albedo = b.col;
+        if(bounce == 0)
+        {
+            write(point, normal);
+        }
     }
-    
+
     origin = point + normal * EPSILON;
-    /*
-     * We have the new origin of the ray and now we just need its new
-     * direction. Since we have the normal of the hemisphere within
-     * which we want to generate the new direction, we can call a
-     * function which generates such vector based on the normal and some
-     * pseudo-random numbers we need to generate as well.
-     */
+    rectangle li = rectangles[0];
     vec4 s;
     vec3 rand = randvec3(bounce);
 
     if(multipleImportanceSampled)
     {
-        sphere li = spheres[0];
-        vec3 d = li.c - origin, n = normalize(d);
+        float wl = PROBABILITY_OF_LIGHT_SAMPLE;
+        vec3 ps = vec3(wl, specularFactor, 1.0 - specularFactor);
+        vec3 np = ps / (ps.x + ps.y + ps.z);
+        vec2 cdf = vec2(np.x, np.x + np.y);
+        vec3 p, c;
+        vec3 r = reflect(dir, normal);
 
-        if(rand.z  < PROBABILITY_OF_LIGHT_SAMPLE)
+        if(rand.z  < cdf.x)
         {
-            s = randomDiskPoint(n, length(d), li.r, rand.xy);
-            float p = hemisphereProbability(normal, s.xyz);
-            s.w = (s.w + p) * PROBABILITY_OF_LIGHT_SAMPLE;
+            s = randomRectangleAreaDirection(origin, li.c, li.x, li.y, rand.xy);
+            p = vec3(s.w,
+                randomCosineWeightedHemispherePDF(normal, s.xyz),
+                randomPhongWeightedHemispherePDF(r, phongExponent, s.xyz));
+            c = np.xzy;
+        } else if (rand.z < cdf.y)
+        {
+            s = randomPhongWeightedHemispherePoint(r, phongExponent, rand.xy);
+            p = vec3(s.w,
+                randomCosineWeightedHemispherePDF(normal, s.xyz),
+                randomRectangleAreaDirectionPDF(origin, li.c, li.x, li.y, s.xyz));
+            c = np.yzx;
         } else
         {
-            s = randomHemispherePoint(normal, rand.xy);
-            float p = diskProbability(n, length(d), li.r, s.xyz);
-            s.w = (s.w + p) * (1.0 - PROBABILITY_OF_LIGHT_SAMPLE);
+            s = randomCosineWeightedHemispherePoint(normal, rand.xy);
+            p = vec3(s.w,
+                randomPhongWeightedHemispherePDF(r, phongExponent, s.xyz),
+                randomRectangleAreaDirectionPDF(origin, li.c, li.x, li.y, s.xyz));
+            c = np.zyx;
         }
+        s.w = dot(p, c);
     }
     else
     {
@@ -265,12 +356,6 @@ vec3 trace(vec3 origin, vec3 dir) {
     if(s.w > 0.0)
         att /= s.w;
   }
-  /*
-   * When followed a ray for the maximum number of bounces and that ray
-   * still did not escape through the ceiling into the light, that ray
-   * does therefore not transport any light back to the eye/camera and
-   * its contribution to this Monte Carlo iteration will be 0.
-   */
   return vec3(0.0);
 }
 
@@ -282,7 +367,7 @@ void main(void) {
     if (any(greaterThanEqual(px, size)))
         return;
 
-    vec2 pos = (vec2(px) + vec2(0.5)) / vec2(size);
+    vec2 pos = (vec2(px) + 0.5) / vec2(size);
     vec3 dir = mix(mix(ray00, ray01, pos.y), mix(ray10, ray11, pos.y), pos.x);
 
     vec3 color = trace(eye, normalize(dir));

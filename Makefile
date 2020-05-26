@@ -4,10 +4,11 @@ CPP := cpp
 OPENGLLIB := -lopengl32
 GDILIB := -lgdi32
 GLFWLIB := -lglfw3
-FREETYPELIB := -lfreetype
+FREETYPELIB := -lfreetype -lassimp
 LDLIBS := $(OPENGLLIB) $(GLFWLIB) $(GDILIB) $(FREETYPELIB)
 LDFLAGS := -L.\lib -L"C:/FREETYPE/build"
 CPPFLAGS := -I.\include -I"C:/FREETYPE/freetype-2.9/include" -I"C:/FREETYPE/freetype-2.9/include/freetype2"
+VFLAGS := -std=c++17
 
 EXE_NAME := tracer.exe
 BIN_DIR := bin
@@ -29,16 +30,16 @@ all: $(EXE)
 -include $(DEP)
 
 $(OBJ_DIR)/%.d: $(SRC_DIR)/%.cpp | $(OBJ_DIR)
-	@$(CPP) $(CPPFLAGS) $< -MM -MT $(@:.d=.o) >$@
+	@$(CPP) $(VFLAGS) $(CPPFLAGS) $< -MM -MT $(@:.d=.o) >$@
 
 $(EXE): $(OBJ)
-	$(CC) $(LDFLAGS) $^ -o $@ $(LDLIBS)
+	$(CC) $(VFLAGS) $(LDFLAGS) $^ -o $@ $(LDLIBS)
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp | $(OBJ_DIR)
-	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
+	$(CC) $(VFLAGS) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c | $(OBJ_DIR)
-	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
+	$(CC) $(VFLAGS) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
 
 $(OBJ_DIR):
 	mkdir $@
