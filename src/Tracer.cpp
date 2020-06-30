@@ -11,7 +11,7 @@ int nextPowerOfTwo(int x) {
 	return x;
 }
 
-Tracer::Tracer(Camera *camera, FrameBuffer *fbo, BVHContainer *bvh) : compute(std::vector<const char*>{"src/shaders/trace3.cs", "src/shaders/geometry.glsl", "src/shaders/random.glsl", "src/shaders/qtablehelper.glsl"}), camera(camera), fbo(fbo), importanceSampled(true), useBlueNoise(true), accumulateSamples(true), maxAccumulateSamples(64), bvh(bvh), maxBounces(5)
+Tracer::Tracer(Camera *camera, FrameBuffer *fbo, BVHContainer *bvh, QTable *qt) : compute(std::vector<const char*>{"src/shaders/trace3.cs", "src/shaders/geometry.glsl", "src/shaders/random.glsl", "src/shaders/qtablehelper.glsl"}), camera(camera), fbo(fbo), importanceSampled(true), useBlueNoise(true), accumulateSamples(true), maxAccumulateSamples(64), bvh(bvh), qt(qt), maxBounces(5)
 {
 	start = std::chrono::system_clock::now();
 
@@ -154,7 +154,10 @@ void Tracer::trace(int frameNumber)
 	//compute.setInt("blueNoiseTex", 0);
 	//compute.setInt("ltc_mat", 1);
 	//compute.setInt("ltc_mag", 2);
+	compute.setInt("numPoints", MAX_POINTS);
 	compute.setInt("numEmitters", bvh->emitters.size());
+	compute.setInt("maxPhi", MAX_PHI);
+	compute.setInt("maxTheta", MAX_THETA);
 	compute.setInt("maxBounces", maxBounces);
 
 	int workSizeX = nextPowerOfTwo(fbo->getTextureDims().x);
@@ -171,6 +174,10 @@ void Tracer::trace(int frameNumber)
 	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, bvh->trianglesSsbo);
 	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 5, bvh->materialsSsbo);
 	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, bvh->emittersSsbo);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 7, bvh->normalsVoronoiSsbo);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 8, bvh->voronoiCentresSsbo);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 9, qt->QTableSsbo);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 10, qt->QVisitsSsbo);
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 
 	glDispatchCompute(workSizeX/compute.workGroupSize[0], workSizeY/compute.workGroupSize[1], 1);
@@ -186,5 +193,6 @@ void Tracer::trace(int frameNumber)
 	glActiveTexture(GL_TEXTURE0);
 
 	glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+	glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 	glUseProgram(0);
 }

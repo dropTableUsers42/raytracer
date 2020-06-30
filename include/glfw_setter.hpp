@@ -11,6 +11,10 @@
 #include <iostream>
 #include <cmath>
 
+
+/**
+ * Class to store all settings of the OpenGL project
+ */
 class GlfwSetter
 {
 	static int width;

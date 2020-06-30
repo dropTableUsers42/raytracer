@@ -12,19 +12,27 @@
 #include "stb_image.hpp"
 #include "stb_image_write.hpp"
 
+/**
+ * Class to store a framebuffer
+ */
 class FrameBuffer
 {
 	GLuint FBO;
 	GLuint width, height;
 public:
-	GLuint texture;
-	GLuint normalTex, posTex;
+	GLuint texture; /**< Color texture*/
+	GLuint normalTex, posTex; /**< Normal and position textures */
 
 	FrameBuffer(int width, int height);
 	void createTextureAttachment(int width, int height);
 	void resizeTextureAttachment(int width, int height);
 	void renderToFramebuffer();
 	void renderToScreen();
+
+	/**
+	 * Saves the color texture to a png image
+	 * @param path path to save to
+	 */
 	void saveToImage(std::string path);
 	void deleteFramebuffer();
 	void setTextureRead();

@@ -15,6 +15,7 @@ struct triangle {
   vec3 n0, n1, n2;
   int mtlIndex;
   vec2 uv0, uv1, uv2;
+  int objId;
 };
 layout(std430, binding = 6) readonly buffer Emitters {
   triangle[] emitters;

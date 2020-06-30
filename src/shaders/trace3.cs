@@ -25,6 +25,8 @@ uniform bool importanceSampled;
 
 uniform int maxBounces;
 
+uniform int numPoints;
+
 ivec2 px;
 
 #define PI 3.14159265359
@@ -37,7 +39,13 @@ ivec2 px;
 #define SKY_COLOR vec3(0.89, 0.96, 1.00)
 #define PROBABILITY_OF_LIGHT_SAMPLE 0.5
 
+#define DEBUG true
+
 #define SPECULARITY 0.5
+
+layout(std430, binding = 8) buffer Positions {
+	vec3[] voronoi_centres;
+};
 
 /**
  * This describes the structure of a single BVH node.
@@ -74,6 +82,7 @@ struct triangle {
                     //8             96
                     //8             104
                     //8             112
+  int objId;
 
 };
 layout(std430, binding = 4) readonly buffer Triangles {
@@ -99,13 +108,26 @@ struct rectangle {
     vec3 y;
 };
 
-#define MAX_POINTS 100
+struct surfaceInteraction
+{
+  int tridx;
+  vec3 color;
+  vec3 normal;
+  vec3 point;
+  int matidx;
+  vec2 uv;
+};
 
 /**
  * Forward declaration of helper functions in qtablehelper.glsl
  */
-uint nearest(vec2 uv, uint N = MAX_POINTS);
-vec2 hammersley(uint i, uint N = MAX_POINTS);
+uint nearest(vec2 uv);
+uint nearest_with_normal(vec2 uv, int objId, vec3 normal);
+uint nearest_with_normal_space(vec3 pos, int objId, vec3 normal);
+vec2 hammersley(uint i);
+vec3 hammersley_space(uint i, int objId);
+int updateQtable(surfaceInteraction oSI,  surfaceInteraction hSI, vec3 dir, float lastAttenuation, int prevIdx, out int nextIdx);
+vec3 sampleScatteringDir(surfaceInteraction SI, int QIdx, vec3 rand, out float outpdf);
 
 
 /**
@@ -186,16 +208,6 @@ vec2 uvForTriangle(trianglehitinfo thinfo, int tridx)
   float u = thinfo.u, v = thinfo.v, w = 1.0 - u - v;
   return vec2(tri.uv0 * w + tri.uv1 * u + tri.uv2 * v);
 }
-
-struct surfaceInteraction
-{
-  int tridx;
-  vec3 color;
-  vec3 normal;
-  vec3 point;
-  int matidx;
-  vec2 uv;
-};
 
 #define NO_NODE -1
 #define ERROR_COLOR vec3(1.0, 0.0, 1.0)
@@ -288,12 +300,15 @@ float randfloat(int s) {
   return random3(vec3(px + ivec2(s), time + rand_seeds[seed - 1]));
 }
 
-vec3 brdfDiffuse(surfaceInteraction SI, vec3 i, vec3 o, vec3 n)
+vec3 brdfDiffuseDebug(surfaceInteraction SI, vec3 i, vec3 o, vec3 n)
 {
   triangle t = triangles[SI.tridx];
   vec3 rho = mtls[t.mtlIndex].Kd;
-  /*uint index = nearest(SI.uv, 1000);
-  vec2 hamm = hammersley(index, 1000);
+  //uint index = nearest_with_normal(SI.uv, t.objId, SI.normal);
+  //uint index = nearest(SI.uv);
+  uint index = nearest_with_normal_space(SI.point, t.objId, SI.normal);
+  vec2 hamm = hammersley(index);
+  vec3 hamm3 = hammersley_space(index, t.objId);
   uint ind = index % 6;
   if(ind == 0)
     rho = vec3(0.0, 0.0, 0.0);
@@ -308,9 +323,17 @@ vec3 brdfDiffuse(surfaceInteraction SI, vec3 i, vec3 o, vec3 n)
   if(ind == 5)
     rho = vec3(1.0, 1.0, 0.0);
 
-  rho = vec3(hamm, 0.0);
-  if(length(hamm - SI.uv) <= 0.001)
-    rho = vec3(1.0, 0.0, 0.0);*/
+  if(length(hamm3 - SI.point) <= 0.01)
+    rho = vec3(1.0, 0.0, 0.0);
+  
+  return rho * ONE_OVER_PI;
+}
+
+vec3 brdfDiffuse(surfaceInteraction SI, vec3 i, vec3 o, vec3 n)
+{
+  triangle t = triangles[SI.tridx];
+  vec3 rho = mtls[t.mtlIndex].Kd;
+  
   return rho * ONE_OVER_PI;
 }
 
@@ -558,6 +581,40 @@ vec3 UniformSampleOneLight(vec3 origin, vec3 dir, surfaceInteraction SI, int bou
     return EstimateDirect(origin, dir, SI, bounces, light) / light_prob;
 }
 
+vec3 sampleOutDir(vec3 dir, surfaceInteraction SI, vec3 sample_rand, out float pdf, out vec3 f)
+{
+  vec4 s; vec3 wi;
+  /*if(sample_rand.z < SPECULARITY)
+  {
+    vec3 r = reflect(dir, SI.normal);
+    s = randomPhongWeightedHemispherePoint(r, mtls[SI.matidx].Ns, sample_rand.xy);
+    wi = s.xyz;
+    pdf = s.w;
+    f = brdfSpecular(SI, wi, -dir, SI.normal);
+  } else
+  {
+    s = randomCosineWeightedHemispherePoint(SI.normal, sample_rand.xy);
+    wi = s.xyz;
+    pdf = s.w;
+    f = brdfDiffuse(SI, wi, -dir, SI.normal);
+  }*/
+
+  s = randomHemispherePoint(SI.normal, sample_rand.xy);
+  wi = s.xyz;
+  pdf = s.w;
+  f = brdf(SI, wi, -dir, SI.normal);
+  return wi;
+}
+
+vec3 sampleOutDirRL(vec3 dir, surfaceInteraction SI,  vec3 sample_rand, out float pdf, out vec3 f, int prevIdx)
+{
+  vec3 wi = sampleScatteringDir(SI, prevIdx, sample_rand, pdf);
+
+  f = brdf(SI, wi, -dir, SI.normal);
+
+  return wi;
+}
+
 vec3 trace(vec3 origin, vec3 dir, vec3 invdir)
 {
   vec3 L = vec3(0.0);
@@ -569,19 +626,23 @@ vec3 trace(vec3 origin, vec3 dir, vec3 invdir)
     intersectGeometry(origin, dir, invdir, SI);
     bool foundIntersection = (SI.tridx != -1);
 
-    if(bounces == 0)
+
+    if(foundIntersection)
     {
-      if(foundIntersection)
+      if(mtls[SI.matidx].emitter)
       {
         L += beta * mtls[SI.matidx].Ke * 30;
+      }
+      if(bounces == 0)
         write(SI.point, SI.normal);
-      }
-      else
-      {
-        L += beta * SKY_COLOR;
-        write(vec3(0.0), vec3(0.0));
-      }
     }
+    else
+    {
+      L += beta * SKY_COLOR;
+      if(bounces == 0)
+        write(vec3(0.0), vec3(0.0));
+    }
+
 
     if(!foundIntersection || bounces >= maxBounces) break;
 
@@ -593,7 +654,7 @@ vec3 trace(vec3 origin, vec3 dir, vec3 invdir)
     vec3 sample_rand = randvec3(bounces);
     //Sample BRDF for new ray
     vec4 s; vec3 wi; float pdf; vec3 f;
-    if(sample_rand.z < SPECULARITY)
+    /*if(sample_rand.z < SPECULARITY)
     {
       vec3 r = reflect(dir, SI.normal);
       s = randomPhongWeightedHemispherePoint(r, mtls[SI.matidx].Ns, sample_rand.xy);
@@ -606,7 +667,8 @@ vec3 trace(vec3 origin, vec3 dir, vec3 invdir)
       wi = s.xyz;
       pdf = s.w;
       f = brdfDiffuse(SI, wi, -dir, SI.normal);
-    }
+    }*/
+    wi = sampleOutDir(dir, SI, sample_rand, pdf, f);
     beta *= f * dot(normalize(SI.normal), normalize(wi)) / pdf;
 
     dir = wi;
@@ -620,6 +682,110 @@ vec3 trace(vec3 origin, vec3 dir, vec3 invdir)
       if(rr_rand < q) break;
       beta /= (1.0 - q);
     }
+  }
+  return L;
+}
+
+/**
+ * Return the color at point ray traced using RL
+ * @param origin pixel
+ * @param dir direction of first ray
+ * @param invdir 1/dir of first ray
+ */
+vec3 traceRL(vec3 origin, vec3 dir, vec3 invdir)
+{
+  vec3 L = vec3(0.0); /**< Resulting color*/
+  vec3 beta = vec3(1.0); /**< Attenuation */
+  int bounces;
+  vec3 prevN, prevPos;
+  int prevObjId;
+  int prevQIdx = -1;
+  surfaceInteraction prevSI;
+  for(bounces = 0;;++bounces)
+  {
+    /**
+     * Intersect current ray with the scene
+     */
+    surfaceInteraction SI;
+    intersectGeometry(origin, dir, invdir, SI);
+    bool foundIntersection = (SI.tridx != -1);
+    bool isAreaLight = false;
+
+    if(foundIntersection)
+    {
+      if(bounces == 0)
+        write(SI.point, SI.normal);
+
+      /**
+       * If emitter, then update L
+       */
+      if(mtls[SI.matidx].emitter)
+      { 
+        if(isnan(L.r) || isnan(L.g) || isnan(L.b))
+          return ERROR_COLOR;
+        L += beta * mtls[SI.matidx].Ke * 30;
+        isAreaLight = true;
+      }
+    }
+    else
+    {
+      /**
+       * If no intersection, the ray has escaped to sky
+       */
+      L += beta * SKY_COLOR;
+      if(bounces == 0)
+        write(vec3(0.0), vec3(0.0));
+    }
+
+    /**
+     * Updathe QTable starting with the second ray
+     */
+    if(bounces > 0)
+    {
+      int temp;
+      int status = updateQtable(prevSI, SI, dir, max(beta.r,max(beta.g,beta.b)), prevQIdx, temp);
+      prevQIdx = temp;
+    }
+
+    /**
+     * If ray has escaped or bounces exceeeds maxBounces, or we hit a light, then stop iterating
+     */
+    if(!foundIntersection || bounces >= maxBounces || isAreaLight) break;
+
+    /**
+     * Update the point under consideration to the ray hitpoint
+     */
+    origin = SI.point + SI.normal * EPSILON;
+    prevN = SI.normal; prevPos = origin; prevObjId = triangles[SI.tridx].objId;
+
+    //vec3 Ld = UniformSampleOneLight(origin, dir, SI, bounces);
+    //L += beta * Ld;
+
+    /**
+     * Spawn a new ray using RL, update beta
+     */
+    vec3 sample_rand = randvec3(bounces);
+    //Sample BRDF for new ray
+    vec3 wi; float pdf; vec3 f;
+    wi = sampleOutDirRL(dir, SI, sample_rand, pdf, f, prevQIdx);
+    beta *= f * dot(normalize(SI.normal), normalize(wi)) / pdf;
+
+    dir = wi;
+    invdir = 1.0 / wi;
+
+    /**
+     * Use russian roulette to terminate path or weight the result if path is continued
+     */
+    float rr_rand = randfloat(bounces);
+    float rrbetamax = max(beta.r, max(beta.g, beta.b));
+    if(bounces > 3)
+    {
+      float q = max(float(0.05), 1- rrbetamax);
+      if(rr_rand < q) break;
+      beta /= (1.0 - q);
+    }
+
+    prevSI = SI;
   }
   return L;
 }
@@ -640,31 +806,13 @@ void main(void) {
   vec3 dir = normalize(mix(mix(ray00, ray01, p.y), mix(ray10, ray11, p.y), p.x));
   vec3 color = trace(eye, dir, 1.0 / dir);
   vec3 oldColor = vec3(0.0);
+  
+  /**
+   * Average the results of all frames till now
+   */
   if(blendFactor > 0.0)
     oldColor = imageLoad(framebuffer, px).rgb;
   vec3 finalColor = mix(color, oldColor, blendFactor);
-
-  /*vec3 rho;
-  uint index = nearest(p, 500);
-  vec2 hamm = hammersley(index, 500);
-  uint ind = index % 6;
-  if(ind == 0)
-    rho = vec3(0.0, 0.0, 0.0);
-  if(ind == 1)
-    rho = vec3(0.0, 1.0, 0.0);
-  if(ind == 2)
-    rho = vec3(0.0, 0.0, 1.0);
-  if(ind == 3)
-    rho = vec3(0.0, 1.0, 1.0);
-  if(ind == 4)
-    rho = vec3(1.0, 0.0, 1.0);
-  if(ind == 5)
-    rho = vec3(1.0, 1.0, 0.0);
-
-  if(length(hamm - p) <= 0.007)
-  {
-    rho = vec3(1.0, 0.0, 0.0);
-  }*/
 
   imageStore(framebuffer, pix, vec4(finalColor, 1.0));
 }

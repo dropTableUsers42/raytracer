@@ -15,12 +15,19 @@
 #include <cstdarg>
 #include <vector>
 
+/**
+ * Class to store the compute shader
+ */
 class ComputeShader
 {
 public:
 	GLuint ID;
 	std::vector<GLint> workGroupSize;
 
+	/**
+	 * Constructor
+	 * @param shaderPathVector array of paths to each shader file to be compiled to shader program
+	 */
 	ComputeShader(std::vector<const char*> shaderPathVector);
 	void use();
 	void setBool(const std::string &name, bool value) const;

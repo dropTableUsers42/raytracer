@@ -174,7 +174,7 @@ void GlfwSetter::key_callback(GLFWwindow* window, int key, int scancode, int act
 		camera -> lookAt -= lookatdiff;
 		frameNumber = 0;
 	}
-	if (key == GLFW_KEY_C && action == GLFW_PRESS)
+	/*if (key == GLFW_KEY_C && action == GLFW_PRESS)
 	{
 		*importanceSampled = !(*importanceSampled);
 		frameNumber = 0;
@@ -203,7 +203,7 @@ void GlfwSetter::key_callback(GLFWwindow* window, int key, int scancode, int act
 	{
 		*maxAccumulateSamples = std::max(1, *maxAccumulateSamples - 1);
 		frameNumber = 0;
-	}
+	}*/
 	if(key == GLFW_KEY_MINUS && action == GLFW_PRESS)
 	{
 		*iterations = glm::max((*iterations)-1, 1);

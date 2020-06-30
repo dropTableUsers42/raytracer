@@ -208,4 +208,5 @@ obj/main.o: src/main.cpp include/main.hpp include/glm/glm/vec3.hpp \
  C:/FREETYPE/freetype-2.9/include/freetype/ftmoderr.h \
  C:/FREETYPE/freetype-2.9/include/freetype/fterrdef.h \
  include/ComputeShader.hpp include/Tracer.hpp include/BVH.hpp \
- include/Material.hpp include/filter.hpp include/ModelLoader.hpp
+ include/Material.hpp include/QTable.hpp include/filter.hpp \
+ include/ModelLoader.hpp

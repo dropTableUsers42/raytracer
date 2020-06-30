@@ -14,6 +14,10 @@
 
 #include "Shader.hpp"
 
+
+/**
+ * Struct to store Freetype data for each character
+ */
 struct Character
 {
     float tx;
@@ -22,6 +26,10 @@ struct Character
     GLuint Advance;
 };
 
+
+/**
+ * Text renderer class
+ */
 class TextRenderer
 {
     Shader shader;
@@ -33,6 +41,15 @@ class TextRenderer
 
 public:
     TextRenderer(GLuint width, GLuint height);
+
+    /**
+     * Renders the text to screen
+     * @param text String to render
+     * @param x X position of render location
+     * @param y Y position of render location
+     * @param scale Scale of each character
+     * @param color Color to render text
+     */
     void RenderText(std::string text, GLfloat x, GLfloat y, GLfloat scale, glm::vec3 color);
 };
 

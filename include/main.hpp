@@ -23,5 +23,6 @@
 #include "filter.hpp"
 #include "ModelLoader.hpp"
 #include "BVH.hpp"
+#include "QTable.hpp"
 
 #endif

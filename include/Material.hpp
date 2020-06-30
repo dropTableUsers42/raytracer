@@ -3,6 +3,9 @@
 
 #include <glm/glm/vec3.hpp>
 
+/**
+ * Simple material class
+ */
 class Material
 {
 public:

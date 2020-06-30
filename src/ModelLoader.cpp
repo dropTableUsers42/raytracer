@@ -22,9 +22,15 @@ void ModelLoader::loadObj(const char* path)
 	}
 
 	std::string curMtl("");
+	int curObj = -1;
 
 	while(!getline(file, line).eof())
 	{
+		if(line.substr(0, line.find(" ")) == "o")
+		{
+			curObj++;
+			triangles_per_obj.resize(triangles_per_obj.size() + 1);
+		}
 		if(line.substr(0, line.find(" ")) == "v")
 		{
 			glm::vec3 vertex;
@@ -84,6 +90,7 @@ void ModelLoader::loadObj(const char* path)
 			{
 				material_per_vertex.push_back(-1);
 			}
+			objID_per_vertex.push_back(curObj);
 			
 		}
 		if(line.substr(0, line.find(" ")) == "mtllib")
@@ -117,13 +124,16 @@ void ModelLoader::loadObj(const char* path)
 		}
 		if((i+1)%3 == 0)
 		{
-			triangles.push_back(Triangle(out_vertices[i-2], out_vertices[i-1], out_vertices[i], out_normals[i-2], out_normals[i-1], out_normals[i], out_uvs[i-2], out_uvs[i-1], out_uvs[i], material_per_vertex[i/3]));
+			Triangle t(out_vertices[i-2], out_vertices[i-1], out_vertices[i], out_normals[i-2], out_normals[i-1], out_normals[i], out_uvs[i-2], out_uvs[i-1], out_uvs[i], material_per_vertex[i/3], objID_per_vertex[i/3]);
+			triangles.push_back(t);
 			if(materialsVector[material_per_vertex[i/3]]->emitter)
 			{
-				emitters.push_back(Triangle(out_vertices[i-2], out_vertices[i-1], out_vertices[i], out_normals[i-2], out_normals[i-1], out_normals[i], out_uvs[i-2], out_uvs[i-1], out_uvs[i], material_per_vertex[i/3]));
+				emitters.push_back(t);
 			}
+			triangles_per_obj[objID_per_vertex[i/3]].push_back(t);
 		}
 	}
+	numObjs = curObj + 1;
 }
 
 void ModelLoader::loadMat(const char *path)

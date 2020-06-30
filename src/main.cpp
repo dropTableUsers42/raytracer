@@ -5,6 +5,11 @@
 
 int main(int argc, char** argv)
 {
+	if(argc < 2)
+	{
+		std::cout << "Usage:\t" << argv[0] << "\tobj_file_path"<< std::endl;
+		return -1;
+	}
 	GlfwSetter glfwSetter;
 	GLFWwindow* window;
 	int glfwError = glfwSetter.init(WIDTH, HEIGHT, window);
@@ -27,13 +32,16 @@ int main(int argc, char** argv)
 	FrameBuffer framebuffer(WIDTH, HEIGHT);
 	Filter filter(WIDTH, HEIGHT, framebuffer.texture, framebuffer.normalTex, framebuffer.posTex);
 	GlfwSetter::framebuffer = &framebuffer;
+	FrameBuffer framebufferfinal(WIDTH, HEIGHT);
 
-	ModelLoader loader("res/Scene/room.obj");
-	BVHContainer bvh(loader.triangles, loader.materialsVector, loader.emitters);
+	ModelLoader loader(argv[1]);
+	QTable qt(loader.numObjs);
+	qt.makeVoronoi(loader.triangles_per_obj);
+	BVHContainer bvh(loader.triangles, loader.materialsVector, loader.emitters, qt.normal_per_voronoi, qt.voronoi_centres);
 
 	Camera camera(
-		glm::vec3(0.0, 2.2, 3.0),
-		glm::vec3(0.0, 0.5, 0.0),
+		glm::vec3(0.0, 2.2, 3.5),
+		glm::vec3(0.0, 3.0, 0.0),
 		glm::vec3(0.0, 1.0, 0.0),
 		60.0,
 		WIDTH,
@@ -43,7 +51,7 @@ int main(int argc, char** argv)
 	);
 	GlfwSetter::camera = &camera;
 
-	Tracer tracer(&camera, &framebuffer, &bvh);
+	Tracer tracer(&camera, &framebuffer, &bvh, &qt);
 	GlfwSetter::importanceSampled = &tracer.importanceSampled;
 	GlfwSetter::useBlueNoise = &tracer.useBlueNoise;
 	GlfwSetter::maxAccumulateSamples = &tracer.maxAccumulateSamples;
@@ -59,6 +67,22 @@ int main(int argc, char** argv)
 	while(!glfwWindowShouldClose(window))
 	{
 		tracer.trace(GlfwSetter::frameNumber);
+		/*if(GlfwSetter::frameNumber == 10)
+		{
+			framebuffer.saveToImage("simpleRL10.png");
+		}
+		if(GlfwSetter::frameNumber == 100)
+		{
+			framebuffer.saveToImage("simpleRL100.png");
+		}
+		if(GlfwSetter::frameNumber == 400)
+		{
+			framebuffer.saveToImage("simpleRL400.png");
+		}
+		if(GlfwSetter::frameNumber == 1000)
+		{
+			framebuffer.saveToImage("simpleRL1000.png");
+		}*/
 		if(GlfwSetter::filter)
 		{
 			filter.filter();
@@ -70,7 +94,27 @@ int main(int argc, char** argv)
 		glClear(GL_COLOR_BUFFER_BIT);
 		quad.shader.use();
 		quad.shader.setFloat("exposure", GlfwSetter::exposure);
+		framebufferfinal.renderToFramebuffer();
 		quad.render();
+		framebufferfinal.renderToScreen();
+		quad.render();
+
+		/*if(GlfwSetter::frameNumber == 10)
+		{
+			framebufferfinal.saveToImage("simple10RLpost.png");
+		}
+		if(GlfwSetter::frameNumber == 100)
+		{
+			framebufferfinal.saveToImage("simple100RLpost.png");
+		}
+		if(GlfwSetter::frameNumber == 400)
+		{
+			framebufferfinal.saveToImage("simple400RLpost.png");
+		}
+		if(GlfwSetter::frameNumber == 1000)
+		{
+			framebufferfinal.saveToImage("simple1000RLpost.png");
+		}*/
 
 		std::string str = "MSPF: ";
 		str += std::to_string(fps.getMillisecondsPerFrame());

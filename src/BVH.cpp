@@ -6,7 +6,7 @@ Triangle::Triangle()
 	normals.resize(3);
 }
 
-Triangle::Triangle(glm::vec3 v1, glm::vec3 v2, glm::vec3 v3, glm::vec3 n1, glm::vec3 n2, glm::vec3 n3, glm::vec2 uv1, glm::vec2 uv2, glm::vec2 uv3, int materialIndex) : materialIndex(materialIndex)
+Triangle::Triangle(glm::vec3 v1, glm::vec3 v2, glm::vec3 v3, glm::vec3 n1, glm::vec3 n2, glm::vec3 n3, glm::vec2 uv1, glm::vec2 uv2, glm::vec2 uv3, int materialIndex, int objId) : materialIndex(materialIndex), objId(objId)
 {
 	vertices.push_back(v1);
 	vertices.push_back(v2);
@@ -55,7 +55,7 @@ BVH::BVH()
 	parent = left = right = hitNext = missNext = NULL;
 }
 
-BVHContainer::BVHContainer(std::vector<Triangle> triangles, std::vector<Material*> materials, std::vector<Triangle> emitters) : triangles(triangles), materials(materials), emitters(emitters)
+BVHContainer::BVHContainer(std::vector<Triangle> triangles, std::vector<Material*> materials, std::vector<Triangle> emitters, std::vector<std::vector<glm::vec3> > normals_per_voronoi, std::vector<std::vector<glm::vec3> > voronoi_centres) : triangles(triangles), materials(materials), emitters(emitters), normals_per_voronoi(normals_per_voronoi), voronoi_centres(voronoi_centres)
 {
 	root = buildBVH(this->triangles);
 	buildNextLinks(root);
@@ -294,7 +294,7 @@ void BVHContainer::bvhToSsbo()
 
 				put(put(trianglesBuffer, t.uvs[0].x), t.uvs[0].y);
 				put(put(trianglesBuffer, t.uvs[1].x), t.uvs[1].y);
-				put(put(put(put(trianglesBuffer, t.uvs[2].x), t.uvs[2].y), 0.0f), 0.0f);
+				put(put(put(put(trianglesBuffer, t.uvs[2].x), t.uvs[2].y), t.objId), 0.0f);
 			}
 		}
 		else
@@ -337,8 +337,28 @@ void BVHContainer::bvhToSsbo()
 
 		put(put(emittersBuffer, t.uvs[0].x), t.uvs[0].y);
 		put(put(emittersBuffer, t.uvs[1].x), t.uvs[1].y);
-		put(put(put(put(emittersBuffer, t.uvs[2].x), t.uvs[2].y), 0.0f), 0.0f);
+		put(put(put(put(emittersBuffer, t.uvs[2].x), t.uvs[2].y), t.objId), 0.0f);
 	}
+
+	for(int i = 0; i < normals_per_voronoi.size(); i++)
+	{
+		for(int j = 0; j < normals_per_voronoi[i].size(); j++)
+		{
+			glm::vec3 n = normals_per_voronoi[i][j];
+			put(put(put(put(normalsVoronoiBuffer, n.x), n.y), n.z), 0.0f);
+		}
+	}
+
+	for(int i = 0; i < voronoi_centres.size(); i++)
+	{
+		for(int j = 0; j < voronoi_centres[i].size(); j++)
+		{
+			glm::vec3 p = voronoi_centres[i][j];
+			put(put(put(put(voronoiCentresBuffer, p.x), p.y), p.z), 1.0f);
+		}
+	}
+
+	
 }
 
 template<class Type>
@@ -369,5 +389,11 @@ void BVHContainer::sendDataToGPU()
 	glGenBuffers(1, &emittersSsbo);
 	glBindBuffer(GL_ARRAY_BUFFER, emittersSsbo);
 	glBufferData(GL_ARRAY_BUFFER, emittersBuffer.str().length(), emittersBuffer.str().c_str(), GL_STATIC_DRAW);
+	glGenBuffers(1, &normalsVoronoiSsbo);
+	glBindBuffer(GL_ARRAY_BUFFER, normalsVoronoiSsbo);
+	glBufferData(GL_ARRAY_BUFFER, normalsVoronoiBuffer.str().length(), normalsVoronoiBuffer.str().c_str(), GL_STATIC_DRAW);
+	glGenBuffers(1, &voronoiCentresSsbo);
+	glBindBuffer(GL_ARRAY_BUFFER, voronoiCentresSsbo);
+	glBufferData(GL_ARRAY_BUFFER, voronoiCentresBuffer.str().length(), voronoiCentresBuffer.str().c_str(), GL_STATIC_DRAW);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }

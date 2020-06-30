@@ -1,6 +1,7 @@
 #include "Camera.hpp"
 
 #include <iostream>
+
 Camera::Camera(glm::vec3 eye, glm::vec3 lookAt, glm::vec3 up, GLfloat fov, GLfloat x, GLfloat y, GLfloat near, GLfloat far) : eye(eye), lookAt(lookAt), up(up), fov(fov), x(x), y(y), near(near), far(far)
 {
 }

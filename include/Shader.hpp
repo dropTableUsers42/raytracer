@@ -12,6 +12,10 @@
 #include <sstream>
 #include <iostream>
 
+
+/**
+ * Simple Shader program class
+ */
 class Shader
 {
 public:

@@ -196,4 +196,5 @@ obj/Tracer.o: src/Tracer.cpp include/Tracer.hpp \
  include/glm/glm/gtx/../gtc/type_precision.inl \
  include/glm/glm/gtx/../gtx/dual_quaternion.hpp \
  include/glm/glm/gtx/../gtx/dual_quaternion.inl \
- include/glm/glm/gtx/string_cast.inl include/Material.hpp
+ include/glm/glm/gtx/string_cast.inl include/Material.hpp \
+ include/QTable.hpp

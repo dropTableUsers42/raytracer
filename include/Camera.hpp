@@ -6,6 +6,9 @@
 #include "glm/glm/mat4x4.hpp"
 #include "glm/glm/gtc/matrix_transform.hpp"
 
+/**
+ * Simple camera class
+ */
 class Camera
 {
 public:

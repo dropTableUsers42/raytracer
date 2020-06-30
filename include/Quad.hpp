@@ -9,6 +9,9 @@
 #include "Shader.hpp"
 #include "Object.hpp"
 
+/**
+ * Simple Screen covering quad
+ */
 class Quad: virtual public Object
 {
 	unsigned int numVertices;
