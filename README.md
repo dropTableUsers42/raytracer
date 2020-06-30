@@ -1,17 +1,17 @@
-# raytracer
+# Ray Tracer
 
 ## Library Dependancies
 Implemented using OpenGL, GLAD (core profile) and GLFW
 
 ## Installation and building
-* In root directory execute
+* To build in root directory
+		
+		make
 
-	make
 
-to build
-
-* Execute
-	.\bin\tracer.exe obj_file_path
+* To start program
+	
+		.\bin\tracer.exe obj_file_path
 
 ## Usage
 * Press WASD to move, ZX  to move up/down
